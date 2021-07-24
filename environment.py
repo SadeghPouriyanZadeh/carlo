@@ -1,5 +1,6 @@
 from .utils import get_molecular_diameter
 
+
 class Environment:
     def __init__(
         self,
@@ -15,6 +16,8 @@ class Environment:
         self.temperature = temperature
         self.pressure = pressure
         self.max_distance = max_distance
+        self.active_gas = active_gas
+        self.passive_gas = passive_gas
         self.active_gas_molweight = active_gas.molweight
         self.passive_gas_molweight = passive_gas.molweight
         self.active_gas_diameter = get_molecular_diameter(
