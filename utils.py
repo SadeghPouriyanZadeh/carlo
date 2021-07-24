@@ -25,7 +25,7 @@ def save_simulation(simulation_obj, file_path=None):
     if not file_path:
         file_path = Path(get_simulation_name())
     with open(file_path, 'wb') as file:
-        pickle.dump(simulation_obj, file_path)
+        pickle.dump(simulation_obj, file)
 
 
 def load_simulation(file_path):
