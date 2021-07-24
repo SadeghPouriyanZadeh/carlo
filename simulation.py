@@ -1,10 +1,12 @@
 import numpy as np
+import pandas as pd
 from rich.progress import Progress
 from .nanofiber import NanoFiber
 from .environment import Environment
 from .distribution import (
     get_sample_maxwell_boltzmann_velocity_distribution as get_v_dist,
 )
+from .utils import get_simulation_name
 
 
 class GasSensorSimulation:
@@ -87,3 +89,36 @@ class GasSensorSimulation:
                 description = "{" + ", ".join(description_parts) + "}"
                 progress.update(task, completed=advance, description=description)
             progress.update(task, completed=100, description="Solution Converged")
+
+    @property
+    def info_dataframe(self):
+        rows = [
+            ["Sensing Material", self.nanofiber.sensitive_material.name],
+            ["Active Gas", self.environment.active_gas.name],
+            ["Passive Gas", self.environment.passive_gas.name],
+            ["Iteration Number", self.iterations],
+            ["Active Cells Ratio", self.active_cell_ratio],
+            ["Active Gas Concentration", self.environment.concentration],
+            ["Nanofiber Width [m]", self.nanofiber.width],
+            ["Nanofiber Length [m]", self.nanofiber.length],
+            ["Mesh number in Width", self.nanofiber.n_x],
+            ["Mesh number in Length", self.nanofiber.n_y],
+            ["Container Pressure [Pa]", self.environment.pressure],
+            ["Container Temperature [K]", self.environment.temperature],
+            ["Container Volume [m^3]", self.environment.container_volume],
+            ["Max Distance [m]", self.environment.max_distance],
+        ]
+        return pd.DataFrame(rows, columns=["Property", "Description"])
+
+    def __repr__(self):
+        return self.info_dataframe.to_string(
+            formatters={"Property": "{:<30}".format, "Description": "{:<80}".format},
+            float_format="{:<80}".format,
+            justify="left",
+            index=False,
+            header=False,
+        )
+
+    def __str__(self):
+        return self.__repr__()
+
