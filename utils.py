@@ -23,3 +23,8 @@ def get_simulation_name():
 def save_simulation(simulation_obj, file_path):
     with open(file_path, 'wb') as file:
         pickle.dump(simulation_obj, file_path)
+
+
+def load_simulation(file_path):
+    with open(file_path, 'rb') as file:
+        return pickle.load(file)
