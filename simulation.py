@@ -87,16 +87,3 @@ class GasSensorSimulation:
                 description = "{" + ", ".join(description_parts) + "}"
                 progress.update(task, completed=advance, description=description)
             progress.update(task, completed=100, description="Solution Converged")
-
-    def get_time_current_array(self):
-        Q_E = 1.6021e-19
-        flat_time_mtx = np.unique(self.time_mtx.flatten())
-        time_list = []
-        current_list = []
-        for t in flat_time_mtx:
-            step_state = np.where(self.time_mtx <= t, self.state_mtx, 1)
-            n_e = (self.nanofiber.n_y * self.nanofiber.n_x) - step_state.sum()
-            current = n_e * Q_E * self.nanofiber.cell_carriers
-            time_list.append(t)
-            current_list.append(current)
-        return np.array(time_list), np.array(current_list)
