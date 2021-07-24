@@ -1,5 +1,6 @@
 import numpy as np
 from datetime import datetime
+import pickle
 
 def get_molecular_diameter(solid_state_density, molweight):
     NA = 6.0221409e23  # avogadro's number
@@ -17,3 +18,8 @@ def get_simulation_name():
     name_parts = now.year, now.month, now.day, now.hour, now.minute
     name =  '_'.join([str(p) for p in name_parts]) + '.carlo'
     return name
+
+
+def save_simulation(simulation_obj, file_path):
+    with open(file_path, 'wb') as file:
+        pickle.dump(simulation_obj, file_path)
