@@ -1,5 +1,6 @@
 from .utils import get_molecular_diameter
 import numpy as np
+import pandas as pd
 
 
 class NanoFiber:
@@ -26,3 +27,28 @@ class NanoFiber:
         num = self.surface_carrier_density * self.length * self.width
         den = self.n_x * self.n_y
         return int(num / den)
+
+    @property
+    def info_dataframe(self):
+        rows = [
+            ["Sensing Material", self.sensitive_material.name],
+            ["Nanofiber Width [m]", self.width],
+            ["Nanofiber Length [m]", self.length],
+            ["Mesh number in Width", self.n_x],
+            ["Mesh number in Length", self.n_y],
+            ["Surface Carrier Density", self.surface_carrier_density],
+            ["Carriers Quantity", self.carriers_quantity],
+        ]
+        return pd.DataFrame(rows, columns=["Property", "Description"])
+
+    def __repr__(self):
+        return self.info_dataframe.to_string(
+            formatters={"Property": "{:<30}".format, "Description": "{:<80}".format},
+            float_format="{:<80}".format,
+            justify="left",
+            index=False,
+            header=False,
+        )
+
+    def __str__(self):
+        return self.__repr__()
