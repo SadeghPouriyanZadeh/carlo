@@ -31,6 +31,11 @@ class GasSensorSimulation:
         ) < 1:
             raise ValueError("Active gas shortage. Check input parameters.")
 
+    @property
+    def maximum_current(self):
+        Q_E = 1.6021e-19
+        return self.nanofiber.carriers_quantity * Q_E
+
     def get_gasses_probabilities(self):
         p_active_gas = self.environment.concentration
         p_passive_gas = 1 - (self.environment.concentration)
