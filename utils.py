@@ -35,7 +35,7 @@ def load_simulation(file_path):
         return pickle.load(file)
 
 
-def get_current_function(time_current_array, maximum_current):
+def get_current_time_function(time_current_array, maximum_current):
     index = -1
     t, i = time_current_array[:, index]
     b = (-1 / t) * np.log((maximum_current - i) / maximum_current)
