@@ -64,11 +64,6 @@ class GasSensorSimulation:
         ) < 1:
             raise Exception("Active gas shortage. Check input parameters.")
 
-    @property
-    def maximum_current(self):
-        Q_E = 1.6021e-19
-        return self.nanofiber.carriers_quantity * Q_E
-
     def get_gasses_probabilities(self):
         p_active_gas = self.environment.concentration
         p_passive_gas = 1 - (self.environment.concentration)
@@ -154,3 +149,24 @@ class GasSensorSimulation:
 
     def __str__(self):
         return self.__repr__()
+
+    def get_state_generator(self):
+        flat_time_mtx = np.unique(self.time_mtx.flatten())
+        for t in flat_time_mtx:
+            step_state = np.where(self.time_mtx <= t, self.state_mtx, 1)
+            yield t, step_state
+
+    def get_released_carriers_from_state(self, state):
+        n_e = (self.nanofiber.n_y * self.nanofiber.n_x) - state.sum()
+        current = n_e * self.nanofiber.cell_carriers
+        return current
+
+    def get_released_carries_vs_time(self):
+        state_generator = self.get_state_generator()
+        time_list = []
+        carriers_list = []
+        for t, step_state in state_generator:
+            time_list.append(t)
+            carriers = self.get_released_carriers_from_state(step_state)
+            carriers_list.append(carriers)
+        return np.array([np.array(time_list), np.array(carriers_list)])
