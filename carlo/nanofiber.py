@@ -16,17 +16,18 @@ class NanoFiber:
         self.carriers_quantity = (width * length) * self.surface_carrier_density
 
     def get_surface_carrier_density(self):
-        PI = np.pi
         diameter = get_molecular_diameter(
-            self.sensitive_material.density, self.sensitive_material.molweight
+            self.sensitive_material.density,
+            self.sensitive_material.molweight,
         )
-        area = PI * (diameter ** 2) / 4
+        area = np.pi * (diameter**2) / 4
         return 1 / area
 
     def get_cell_carriers(self):
-        num = self.surface_carrier_density * self.length * self.width
+        area = self.width * self.length
+        num = self.surface_carrier_density * area
         den = self.n_x * self.n_y
-        return int(num / den)
+        return num // den
 
     @property
     def info_dataframe(self):
