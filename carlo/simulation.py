@@ -1,35 +1,68 @@
+from typing import NamedTuple
+
 import numpy as np
 import pandas as pd
-from rich.progress import Progress
-from .nanofiber import NanoFiber
-from .environment import Environment
+from tqdm import tqdm
+
 from .distribution import (
     get_sample_maxwell_boltzmann_velocity_distribution as get_v_dist,
 )
+from .environment import Environment
+from .materials import Material
+from .nanofiber import NanoFiber
 from .utils import get_simulation_name
 
 
+class SimulationSetup(NamedTuple):
+    nano_fiber_width: float
+    nano_fiber_length: float
+    n_x: int
+    n_y: int
+    nano_fiber_material: Material
+    temperature: float
+    pressure: float
+    container_volume: float
+    concentration: float
+    max_distance: float
+    active_gas: Material
+    passive_gas: Material
+
+
 class GasSensorSimulation:
-    def __init__(
-        self, nanofiber: NanoFiber, environment: Environment,
-    ):
-        self.nanofiber = nanofiber
-        self.environment = environment
+    def __init__(self, setup: SimulationSetup):
+        self.nanofiber = NanoFiber(
+            width=setup.nano_fiber_width,
+            length=setup.nano_fiber_length,
+            n_x=setup.n_x,
+            n_y=setup.n_y,
+            material=setup.nano_fiber_material,
+        )
+        self.environment = Environment(
+            temperature=setup.temperature,
+            pressure=setup.pressure,
+            container_volume=setup.container_volume,
+            concentration=setup.concentration,
+            max_distance=setup.max_distance,
+            active_gas=setup.active_gas,
+            passive_gas=setup.passive_gas,
+        )
 
         self.state_mtx = np.ones(self.nanofiber.grid_size, dtype=np.bool_)
         self.time_mtx = np.zeros(self.nanofiber.grid_size)
         self.iterations = 0
 
         self.active_v_dist = get_v_dist(
-            self.environment.temperature, self.environment.active_gas_molweight
+            self.environment.temperature,
+            self.environment.active_gas_molweight,
         )
         self.passive_v_dist = get_v_dist(
-            self.environment.temperature, self.environment.passive_gas_molweight
+            self.environment.temperature,
+            self.environment.passive_gas_molweight,
         )
         if (
             self.environment.active_gas_quantity / self.nanofiber.carriers_quantity
         ) < 1:
-            raise ValueError("Active gas shortage. Check input parameters.")
+            raise Exception("Active gas shortage. Check input parameters.")
 
     @property
     def maximum_current(self):
@@ -76,29 +109,24 @@ class GasSensorSimulation:
 
     def run(self, active_cell_ratio_to_converge):
         total_remained = self.active_cell_ratio - active_cell_ratio_to_converge
-        with Progress() as progress:
-            task = progress.add_task("[red]Solving...", total=100)
-            while not self.is_converged(active_cell_ratio_to_converge):
-                mixture_mtx = self.get_mixture_mtx()
-                self.state_mtx *= mixture_mtx
-                #                 self.update_time_mtx(mixture_mtx)
-                self.update_time_mtx(mixture_mtx)
-                self.iterations += 1
-                self.simulation_time = (self.time_mtx * -1 * (self.state_mtx - 1)).max()
-                remained = self.active_cell_ratio - active_cell_ratio_to_converge
-                advance = int((total_remained - remained) * 100 / total_remained)
-                description_parts = [
-                    f"ACR: {self.active_cell_ratio:.2e}",
-                    f"ITR: {self.iterations:07}",
-                ]
-                description = "{" + ", ".join(description_parts) + "}"
-                progress.update(task, completed=advance, description=description)
-            progress.update(task, completed=100, description="Solution Converged")
+        pbar = tqdm(total=100, desc="Simulating")
+        while not self.is_converged(active_cell_ratio_to_converge):
+            mixture_mtx = self.get_mixture_mtx()
+            self.state_mtx *= mixture_mtx
+            self.update_time_mtx(mixture_mtx)
+            self.iterations += 1
+            self.simulation_time = (self.time_mtx * -1 * (self.state_mtx - 1)).max()
+            remained = self.active_cell_ratio - active_cell_ratio_to_converge
+            advance = int((total_remained - remained) * 100 / total_remained)
+            postfix = {"ACR": self.active_cell_ratio, "ITR": self.iterations}
+            pbar.set_postfix(postfix)
+            pbar.update(max(advance - pbar.n - 1, 0))
+        pbar.close()
 
     @property
     def info_dataframe(self):
         rows = [
-            ["Sensing Material", self.nanofiber.sensitive_material.name],
+            ["Sensing Material", self.nanofiber.material.name],
             ["Active Gas", self.environment.active_gas.name],
             ["Passive Gas", self.environment.passive_gas.name],
             ["Iteration Number", self.iterations],
@@ -126,4 +154,3 @@ class GasSensorSimulation:
 
     def __str__(self):
         return self.__repr__()
-

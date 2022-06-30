@@ -54,16 +54,15 @@ class PostProcess:
 
     def get_current_figure(self, datapoints=10):
         time_current_array = self.get_time_current_array()
-        points = 20
         interval = int(
             (self.simulation_obj.nanofiber.n_x * self.simulation_obj.nanofiber.n_y)
-            / points
+            / datapoints
         )
         t = time_current_array[0, ::interval]
         y_hat = self.current_estimator(t)
         y = time_current_array[1, ::interval]
 
-        plt.figure(figsize=(8, 5), dpi=100)
+        plt.figure(figsize=(5, 3), dpi=100, facecolor="white")
         plt.scatter(t, y * 1e9, color="red", label="Simulation Data")
         plt.plot(t, y_hat * 1e9, color="blue", label="Fitted Curve")
         plt.xlabel("t $[s]$")

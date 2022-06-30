@@ -1,4 +1,4 @@
-from .simulation import GasSensorSimulation
+from .simulation import GasSensorSimulation, SimulationSetup
 from .nanofiber import NanoFiber
 from .environment import Environment
 from . import materials

@@ -35,7 +35,7 @@ class NanoFiber:
         n_x: int,
         n_y: int,
         material: Material,
-    ):
+    ) -> None:
         self.width = width
         self.length = length
         self.n_x = n_x
@@ -52,7 +52,7 @@ class NanoFiber:
         self.carriers_quantity = (width * length) * self.surface_carrier_density
 
     @property
-    def info_dataframe(self):
+    def info_dataframe(self) -> pd.DataFrame:
         rows = [
             ["Sensing Material", self.material.name],
             ["Nanofiber Width [m]", self.width],
@@ -64,7 +64,7 @@ class NanoFiber:
         ]
         return pd.DataFrame(rows, columns=["Property", "Description"])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.info_dataframe.to_string(
             formatters={"Property": "{:<30}".format, "Description": "{:<80}".format},
             float_format="{:<80}".format,
@@ -73,5 +73,5 @@ class NanoFiber:
             header=False,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()

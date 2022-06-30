@@ -1,18 +1,32 @@
-from .utils import get_molecular_diameter
 import pandas as pd
+
+from .materials import Material
+from .utils import get_molecular_diameter
+
+
+def get_passive_gas_quantity(
+    pressure: float,
+    temperature: float,
+    volume: float,
+) -> float:
+    R = 8.314  # universal gas constant
+    NA = 6.0221409e23  # avogadro's number
+    num = NA * pressure * volume
+    den = R * temperature
+    return num / den
 
 
 class Environment:
     def __init__(
         self,
-        concentration,
-        temperature,
-        pressure,
-        max_distance,
-        active_gas,
-        passive_gas,
-        container_volume,
-    ):
+        temperature: float,
+        pressure: float,
+        container_volume: float,
+        concentration: float,
+        max_distance: float,
+        active_gas: Material,
+        passive_gas: Material,
+    ) -> None:
         self.concentration = concentration
         self.temperature = temperature
         self.pressure = pressure
@@ -28,18 +42,15 @@ class Environment:
             passive_gas.density, passive_gas.molweight
         )
         self.container_volume = container_volume
-        self.passive_gas_quantity = self.get_passive_gas_quantity()
+        self.passive_gas_quantity = get_passive_gas_quantity(
+            pressure,
+            temperature,
+            container_volume,
+        )
         self.active_gas_quantity = self.passive_gas_quantity * concentration
 
-    def get_passive_gas_quantity(self):
-        R = 8.314  # universal gas constant
-        NA = 6.0221409e23  # avogadro's number
-        num = NA * self.pressure * self.container_volume
-        den = R * self.temperature
-        return num / den
-
     @property
-    def info_dataframe(self):
+    def info_dataframe(self) -> pd.DataFrame:
         rows = [
             ["Active Gas", self.active_gas.name],
             ["Passive Gas", self.passive_gas.name],
@@ -55,7 +66,7 @@ class Environment:
         ]
         return pd.DataFrame(rows, columns=["Property", "Description"])
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.info_dataframe.to_string(
             formatters={"Property": "{:<30}".format, "Description": "{:<80}".format},
             float_format="{:<80}".format,
@@ -64,6 +75,5 @@ class Environment:
             header=False,
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
-
