@@ -1,38 +1,60 @@
 from .utils import get_molecular_diameter
 import numpy as np
 import pandas as pd
+from .materials import Material
+from typing import Tuple
+
+
+def get_surface_carrier_density(material: Material) -> float:
+    diameter = get_molecular_diameter(
+        material.density,
+        material.molweight,
+    )
+    area = np.pi * (diameter**2) / 4
+    return 1 / area
+
+
+def get_cell_carriers(
+    width: float,
+    length: float,
+    surface_carrier_density: float,
+    grid_size: Tuple[int, int],
+) -> int:
+    n_y, n_x = grid_size
+    area = width * length
+    num = surface_carrier_density * area
+    den = n_x * n_y
+    return num // den
 
 
 class NanoFiber:
-    def __init__(self, width, length, n_x, n_y, sensitive_material):
+    def __init__(
+        self,
+        width: float,
+        length: float,
+        n_x: int,
+        n_y: int,
+        material: Material,
+    ):
         self.width = width
         self.length = length
         self.n_x = n_x
         self.n_y = n_y
-        self.sensitive_material = sensitive_material
-        self.surface_carrier_density = self.get_surface_carrier_density()
+        self.material = material
+        self.surface_carrier_density = get_surface_carrier_density(material)
         self.grid_size = (self.n_y, self.n_x)
-        self.cell_carriers = self.get_cell_carriers()
-        self.carriers_quantity = (width * length) * self.surface_carrier_density
-
-    def get_surface_carrier_density(self):
-        diameter = get_molecular_diameter(
-            self.sensitive_material.density,
-            self.sensitive_material.molweight,
+        self.cell_carriers = get_cell_carriers(
+            width,
+            length,
+            self.surface_carrier_density,
+            self.grid_size,
         )
-        area = np.pi * (diameter**2) / 4
-        return 1 / area
-
-    def get_cell_carriers(self):
-        area = self.width * self.length
-        num = self.surface_carrier_density * area
-        den = self.n_x * self.n_y
-        return num // den
+        self.carriers_quantity = (width * length) * self.surface_carrier_density
 
     @property
     def info_dataframe(self):
         rows = [
-            ["Sensing Material", self.sensitive_material.name],
+            ["Sensing Material", self.material.name],
             ["Nanofiber Width [m]", self.width],
             ["Nanofiber Length [m]", self.length],
             ["Mesh number in Width", self.n_x],
